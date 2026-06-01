@@ -15,6 +15,7 @@ struct CalendarAirplaneApp: App {
         WindowGroup {
             ContentView()
         }
+        .defaultSize(width: 440, height: 360)
 
         Settings {
             SettingsView()

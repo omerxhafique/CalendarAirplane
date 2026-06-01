@@ -24,6 +24,8 @@
 		A1000001000000000000000F /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000012 /* LaunchAtLoginController.swift */; };
 		A10000010000000000000010 /* LoopbackOAuthReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000013 /* LoopbackOAuthReceiver.swift */; };
 		A10000010000000000000011 /* GoogleOAuth.local.plist in Resources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000014 /* GoogleOAuth.local.plist */; };
+		A10000010000000000000012 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000016 /* AppTheme.swift */; };
+		A10000010000000000000013 /* TodayAgendaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000017 /* TodayAgendaStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +50,8 @@
 		A20000010000000000000013 /* LoopbackOAuthReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopbackOAuthReceiver.swift; sourceTree = "<group>"; };
 		A20000010000000000000014 /* GoogleOAuth.local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = GoogleOAuth.local.plist; sourceTree = "<group>"; };
 		A20000010000000000000015 /* GoogleOAuth.local.plist.example */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = GoogleOAuth.local.plist.example; sourceTree = "<group>"; };
+		A20000010000000000000016 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		A20000010000000000000017 /* TodayAgendaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayAgendaStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +145,7 @@
 				A2000001000000000000000A /* PKCE.swift */,
 				A20000010000000000000012 /* LaunchAtLoginController.swift */,
 				A20000010000000000000013 /* LoopbackOAuthReceiver.swift */,
+				A20000010000000000000017 /* TodayAgendaStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -160,6 +165,7 @@
 				A20000010000000000000003 /* SettingsView.swift */,
 				A20000010000000000000004 /* AirplaneBannerView.swift */,
 				A20000010000000000000010 /* CartoonPlaneView.swift */,
+				A20000010000000000000016 /* AppTheme.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -232,6 +238,8 @@
 				A1000001000000000000000D /* CartoonPlaneView.swift in Sources */,
 				A1000001000000000000000F /* LaunchAtLoginController.swift in Sources */,
 				A10000010000000000000010 /* LoopbackOAuthReceiver.swift in Sources */,
+				A10000010000000000000012 /* AppTheme.swift in Sources */,
+				A10000010000000000000013 /* TodayAgendaStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

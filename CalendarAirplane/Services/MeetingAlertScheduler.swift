@@ -14,7 +14,12 @@ final class MeetingAlertScheduler: ObservableObject {
 
     private let calendarService = CalendarSyncService()
     private var pollTask: Task<Void, Never>?
-    private var animationQueue: [String] = []
+    private struct FlyoverPayload {
+        let title: String
+        let timeRange: String?
+    }
+
+    private var animationQueue: [FlyoverPayload] = []
     private var isPlayingAnimation = false
 
     private var alertedKeys: Set<String> {
@@ -37,7 +42,10 @@ final class MeetingAlertScheduler: ObservableObject {
     }
 
     func triggerTestFlight(title: String = "Team sync — starting soon") {
-        enqueueAnimation(title: title, dedupeKey: nil)
+        let start = Date().addingTimeInterval(5 * 60)
+        let end = start.addingTimeInterval(30 * 60)
+        let range = "\(TodayAgendaStore.formatTime(start)) – \(TodayAgendaStore.formatTime(end))"
+        enqueueAnimation(title: title, timeRange: range, dedupeKey: nil)
     }
 
     private func pollLoop() async {
@@ -66,7 +74,8 @@ final class MeetingAlertScheduler: ObservableObject {
                 guard secondsUntil > 0, secondsUntil <= TimeInterval(lead * 60) else { continue }
                 guard !alertedKeys.contains(event.dedupeKey) else { continue }
                 markAlerted(event.dedupeKey)
-                enqueueAnimation(title: event.title, dedupeKey: event.dedupeKey)
+                let range = TodayAgendaStore.formatTimeRange(for: event)
+                enqueueAnimation(title: event.title, timeRange: range, dedupeKey: event.dedupeKey)
             }
             statusMessage = nil
         } catch CalendarError.unauthorized {
@@ -86,16 +95,19 @@ final class MeetingAlertScheduler: ObservableObject {
         alertedKeys = keys
     }
 
-    private func enqueueAnimation(title: String, dedupeKey: String?) {
-        animationQueue.append(title)
+    private func enqueueAnimation(title: String, timeRange: String?, dedupeKey: String?) {
+        animationQueue.append(FlyoverPayload(title: title, timeRange: timeRange))
         processQueue()
     }
 
     private func processQueue() {
         guard !isPlayingAnimation, !animationQueue.isEmpty else { return }
         isPlayingAnimation = true
-        let title = animationQueue.removeFirst()
-        OverlayWindowController.shared.playFlight(meetingTitle: title) { [weak self] in
+        let payload = animationQueue.removeFirst()
+        OverlayWindowController.shared.playFlight(
+            meetingTitle: payload.title,
+            timeRange: payload.timeRange
+        ) { [weak self] in
             Task { @MainActor in
                 self?.isPlayingAnimation = false
                 self?.processQueue()
