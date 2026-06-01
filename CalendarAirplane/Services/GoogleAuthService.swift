@@ -1,9 +1,8 @@
 import AppKit
-import AuthenticationServices
 import Foundation
 
 @MainActor
-final class GoogleAuthService: NSObject, ObservableObject {
+final class GoogleAuthService: ObservableObject {
     static let shared = GoogleAuthService()
 
     @Published private(set) var isSignedIn = false
@@ -13,16 +12,14 @@ final class GoogleAuthService: NSObject, ObservableObject {
     private var accessToken: String?
     private var accessExpiry: Date?
     private var codeVerifier: String?
-    private var authSession: ASWebAuthenticationSession?
 
-    private override init() {
-        super.init()
+    private init() {
         isSignedIn = KeychainHelper.load(account: "refresh_token") != nil
     }
 
     func signIn() {
         guard GoogleOAuthConfig.isConfigured else {
-            lastError = "Set GOOGLE_CLIENT_ID in Info.plist (Google Cloud Desktop OAuth client)."
+            lastError = "Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Info.plist (Desktop OAuth client in Google Cloud)."
             return
         }
         lastError = nil
@@ -41,33 +38,29 @@ final class GoogleAuthService: NSObject, ObservableObject {
             URLQueryItem(name: "access_type", value: "offline"),
             URLQueryItem(name: "prompt", value: "consent"),
         ]
-        guard let url = components.url else { return }
+        guard let authURL = components.url else { return }
 
-        authSession = ASWebAuthenticationSession(
-            url: url,
-            callbackURLScheme: GoogleOAuthConfig.callbackURLScheme
-        ) { [weak self] callbackURL, error in
-            Task { @MainActor in
-                guard let self else { return }
-                if let error {
-                    self.lastError = error.localizedDescription
-                    return
-                }
-                guard let callbackURL,
-                      let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
-                        .queryItems?
-                        .first(where: { $0.name == "code" })?
-                        .value
+        Task {
+            do {
+                async let redirectURL = LoopbackOAuthReceiver.waitForRedirect(
+                    port: GoogleOAuthConfig.loopbackPort,
+                    path: "/oauth2redirect"
+                )
+                NSWorkspace.shared.open(authURL)
+                let callbackURL = try await redirectURL
+                guard let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
+                    .queryItems?
+                    .first(where: { $0.name == "code" })?
+                    .value
                 else {
-                    self.lastError = "Missing authorization code."
+                    lastError = "Missing authorization code."
                     return
                 }
-                await self.exchangeCode(code)
+                await exchangeCode(code)
+            } catch {
+                lastError = error.localizedDescription
             }
         }
-        authSession?.presentationContextProvider = self
-        authSession?.prefersEphemeralWebBrowserSession = false
-        authSession?.start()
     }
 
     func signOut() {
@@ -98,13 +91,14 @@ final class GoogleAuthService: NSObject, ObservableObject {
             return
         }
         do {
-            let body: [String: String] = [
+            var body: [String: String] = [
                 "client_id": GoogleOAuthConfig.clientID,
                 "code": code,
                 "code_verifier": verifier,
                 "grant_type": "authorization_code",
                 "redirect_uri": GoogleOAuthConfig.redirectURI,
             ]
+            body.merge(tokenClientCredentials()) { _, new in new }
             let token = try await postTokenRequest(body: body)
             try store(token: token)
             isSignedIn = true
@@ -115,11 +109,12 @@ final class GoogleAuthService: NSObject, ObservableObject {
     }
 
     private func refreshAccessToken(refreshToken: String) async throws {
-        let body: [String: String] = [
+        var body: [String: String] = [
             "client_id": GoogleOAuthConfig.clientID,
             "refresh_token": refreshToken,
             "grant_type": "refresh_token",
         ]
+        body.merge(tokenClientCredentials()) { _, new in new }
         let token = try await postTokenRequest(body: body)
         try store(token: token)
     }
@@ -139,6 +134,11 @@ final class GoogleAuthService: NSObject, ObservableObject {
         }
     }
 
+    private func tokenClientCredentials() -> [String: String] {
+        guard let secret = GoogleOAuthConfig.clientSecret else { return [:] }
+        return ["client_secret": secret]
+    }
+
     private func postTokenRequest(body: [String: String]) async throws -> TokenResponse {
         var request = URLRequest(url: URL(string: "https://oauth2.googleapis.com/token")!)
         request.httpMethod = "POST"
@@ -149,6 +149,10 @@ final class GoogleAuthService: NSObject, ObservableObject {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200 ... 299).contains(http.statusCode) else {
+            if let apiError = try? JSONDecoder().decode(GoogleTokenErrorResponse.self, from: data),
+               let description = apiError.error_description ?? apiError.error {
+                throw AuthError.server(description)
+            }
             let message = String(data: data, encoding: .utf8) ?? "Token request failed"
             throw AuthError.server(message)
         }
@@ -170,10 +174,9 @@ final class GoogleAuthService: NSObject, ObservableObject {
     }
 }
 
-extension GoogleAuthService: ASWebAuthenticationPresentationContextProviding {
-    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        NSApplication.shared.keyWindow ?? NSApplication.shared.windows.first ?? ASPresentationAnchor()
-    }
+private struct GoogleTokenErrorResponse: Decodable {
+    let error: String?
+    let error_description: String?
 }
 
 private struct TokenResponse: Decodable {

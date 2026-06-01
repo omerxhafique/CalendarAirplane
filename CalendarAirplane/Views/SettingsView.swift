@@ -34,7 +34,7 @@ struct SettingsView: View {
 
             Section("Google Calendar") {
                 if !GoogleOAuthConfig.isConfigured {
-                    Text("Add your Desktop OAuth Client ID as `GOOGLE_CLIENT_ID` in Info.plist, and register redirect URI `\(GoogleOAuthConfig.redirectURI)` in Google Cloud Console.")
+                    Text("Copy GoogleOAuth.local.plist.example to GoogleOAuth.local.plist and add your Desktop client ID and secret. That file is gitignored. Loopback: \(GoogleOAuthConfig.redirectURI).")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }

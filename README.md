@@ -12,10 +12,16 @@ SwiftUI app that connects to Google Calendar and plays a click-through overlay: 
 
 1. Create a project and enable **Google Calendar API**.
 2. Configure the **OAuth consent screen** and add yourself as a test user (while in Testing).
-3. Create an OAuth client ID of type **Desktop app**.
-4. Under the client, add an authorized redirect URI:
-   - `com.calendarairplane.app:/oauth2redirect`
-5. Copy the **Client ID** into [`CalendarAirplane/Info.plist`](CalendarAirplane/Info.plist) as `GOOGLE_CLIENT_ID` (replace the placeholder).
+3. Create an OAuth client ID of type **Desktop app** (there is no redirect URI field — that is normal).
+4. **OAuth credentials (keep secrets out of git):**
+   ```bash
+   cp CalendarAirplane/GoogleOAuth.local.plist.example CalendarAirplane/GoogleOAuth.local.plist
+   ```
+   Edit `GoogleOAuth.local.plist` with your Desktop client **Client ID** and **Client secret**.  
+   This file is listed in `.gitignore` and is **not** pushed to GitHub.  
+   `Info.plist` only contains placeholders for templates.
+
+The app uses Google’s loopback redirect `http://127.0.0.1:8765/oauth2redirect`, which Desktop clients allow automatically.
 
 ## Run in Xcode
 

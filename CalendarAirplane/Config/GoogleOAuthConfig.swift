@@ -1,25 +1,50 @@
 import Foundation
 
 enum GoogleOAuthConfig {
-    /// Replace with your OAuth 2.0 Client ID (Desktop app) from Google Cloud Console.
-    /// You can also set the `GOOGLE_CLIENT_ID` key in Info.plist.
     static let defaultClientID = "YOUR_CLIENT_ID.apps.googleusercontent.com"
 
-    static let redirectURI = "com.calendarairplane.app:/oauth2redirect"
-    static let callbackURLScheme = "com.calendarairplane.app"
-
+    static let loopbackPort: UInt16 = 8765
+    static var redirectURI: String { "http://127.0.0.1:\(loopbackPort)/oauth2redirect" }
     static let scope = "https://www.googleapis.com/auth/calendar.readonly"
 
     static var clientID: String {
-        if let id = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_CLIENT_ID") as? String,
-           !id.isEmpty,
-           !id.hasPrefix("YOUR_") {
-            return id
-        }
-        return defaultClientID
+        oauthValue(for: "GOOGLE_CLIENT_ID") ?? defaultClientID
+    }
+
+    static var clientSecret: String? {
+        oauthValue(for: "GOOGLE_CLIENT_SECRET")
     }
 
     static var isConfigured: Bool {
-        !clientID.hasPrefix("YOUR_")
+        guard let id = oauthValue(for: "GOOGLE_CLIENT_ID"),
+              let secret = oauthValue(for: "GOOGLE_CLIENT_SECRET") else {
+            return false
+        }
+        return !id.hasPrefix("YOUR_") && !secret.hasPrefix("YOUR_")
+    }
+
+    /// Prefer `GoogleOAuth.local.plist` (gitignored); fall back to Info.plist placeholders.
+    private static func oauthValue(for key: String) -> String? {
+        if let local = localOAuthPlist()[key] as? String,
+           !local.isEmpty,
+           !local.hasPrefix("YOUR_") {
+            return local
+        }
+        if let value = Bundle.main.object(forInfoDictionaryKey: key) as? String,
+           !value.isEmpty,
+           !value.hasPrefix("YOUR_") {
+            return value
+        }
+        return nil
+    }
+
+    private static func localOAuthPlist() -> [String: Any] {
+        guard let url = Bundle.main.url(forResource: "GoogleOAuth.local", withExtension: "plist"),
+              let data = try? Data(contentsOf: url),
+              let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
+              let dict = plist as? [String: Any] else {
+            return [:]
+        }
+        return dict
     }
 }

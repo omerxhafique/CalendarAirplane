@@ -34,9 +34,22 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            if let err = auth.lastError, !auth.isSignedIn {
+                Text(err)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
             HStack {
-                Button("Open Settings…") {
-                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                if auth.isSignedIn {
+                    Button("Settings…") {
+                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    }
+                } else {
+                    Button("Sign in with Google") {
+                        auth.signIn()
+                    }
+                    .disabled(!GoogleOAuthConfig.isConfigured)
                 }
                 Button("Demo View") {
                     scheduler.triggerTestFlight()
@@ -51,6 +64,13 @@ struct ContentView: View {
         .onAppear {
             if auth.isSignedIn {
                 scheduler.start()
+            }
+        }
+        .onChange(of: auth.isSignedIn) { _, signedIn in
+            if signedIn {
+                scheduler.start()
+            } else {
+                scheduler.stop()
             }
         }
     }
