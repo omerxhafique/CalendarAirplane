@@ -22,6 +22,8 @@
 	<string>YOUR_CLIENT_ID.apps.googleusercontent.com</string>
 	<key>GOOGLE_CLIENT_SECRET</key>
 	<string>YOUR_CLIENT_SECRET</string>
+	<key>LSUIElement</key>
+	<true/>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>CFBundleURLTypes</key>

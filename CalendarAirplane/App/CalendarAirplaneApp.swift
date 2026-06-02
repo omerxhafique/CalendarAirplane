@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct CalendarAirplaneApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     init() {
         Task { @MainActor in
             LaunchAtLoginController.shared.refresh()
@@ -12,10 +14,10 @@ struct CalendarAirplaneApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        MenuBarExtra("Calendar Airplane", systemImage: "airplane") {
             ContentView()
         }
-        .defaultSize(width: 440, height: 360)
+        .menuBarExtraStyle(.window)
 
         Settings {
             SettingsView()

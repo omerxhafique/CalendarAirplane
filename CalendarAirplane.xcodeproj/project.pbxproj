@@ -26,6 +26,7 @@
 		A10000010000000000000011 /* GoogleOAuth.local.plist in Resources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000014 /* GoogleOAuth.local.plist */; };
 		A10000010000000000000012 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000016 /* AppTheme.swift */; };
 		A10000010000000000000013 /* TodayAgendaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000017 /* TodayAgendaStore.swift */; };
+		A10000010000000000000014 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000018 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 		A20000010000000000000015 /* GoogleOAuth.local.plist.example */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = GoogleOAuth.local.plist.example; sourceTree = "<group>"; };
 		A20000010000000000000016 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		A20000010000000000000017 /* TodayAgendaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayAgendaStore.swift; sourceTree = "<group>"; };
+		A20000010000000000000018 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000010000000000000001 /* CalendarAirplaneApp.swift */,
+				A20000010000000000000018 /* AppDelegate.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -240,6 +243,7 @@
 				A10000010000000000000010 /* LoopbackOAuthReceiver.swift in Sources */,
 				A10000010000000000000012 /* AppTheme.swift in Sources */,
 				A10000010000000000000013 /* TodayAgendaStore.swift in Sources */,
+				A10000010000000000000014 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
