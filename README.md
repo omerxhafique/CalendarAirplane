@@ -79,3 +79,17 @@ Before making the repo public:
 The **flyover animation** uses the `FlyoverPlane` image asset (transparent PNG). The **app icon** uses the same art on a white square.
 
 The **Dock/Finder icon** uses `Assets.xcassets/AppIcon.appiconset/` — plane centered on a **white** square. To change it, replace `FlyoverPlane.png` with a **transparent** PNG (side view, nose right), regenerate `AppIcon.appiconset/icon_*.png`, then clean build (⇧⌘K, ⌘R).
+
+## Repository metadata (recommended on GitHub)
+
+- **Description:** Menu bar macOS app that alerts upcoming Google Calendar meetings with a flyover banner.
+- **Topics:** `swift`, `swiftui`, `macos`, `menu-bar-app`, `google-calendar`, `oauth2`.
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE`.
+
+## Contributing and security
+
+- Contribution guide: `CONTRIBUTING.md`
+- Security policy: `SECURITY.md`
