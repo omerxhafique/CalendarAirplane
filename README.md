@@ -2,6 +2,8 @@
 
 SwiftUI app that connects to Google Calendar and plays a click-through overlay: an airplane flies left to right with a banner showing the upcoming meeting title.
 
+![Calendar Airplane demo](docs/assets/calendarairplane-demo.gif)
+
 ## Requirements
 
 - macOS 14+
