@@ -19,7 +19,7 @@ final class GoogleAuthService: ObservableObject {
 
     func signIn() {
         guard GoogleOAuthConfig.isConfigured else {
-            lastError = "Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Info.plist (Desktop OAuth client in Google Cloud)."
+            lastError = "Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in ~/Library/Application Support/CalendarAirplane/GoogleOAuth.local.plist (or local app plist for development)."
             return
         }
         lastError = nil

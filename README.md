@@ -18,8 +18,15 @@ SwiftUI app that connects to Google Calendar and plays a click-through overlay: 
    cp CalendarAirplane/GoogleOAuth.local.plist.example CalendarAirplane/GoogleOAuth.local.plist
    ```
    Edit `GoogleOAuth.local.plist` with your Desktop client **Client ID** and **Client secret**.  
-   This file is listed in `.gitignore` and is **not** pushed to GitHub.  
-   `Info.plist` only contains placeholders for templates.
+   This file is listed in `.gitignore` and is **not** pushed to GitHub.
+
+5. (Recommended for safer local installs) store secrets outside the repo and app bundle:
+   ```bash
+   mkdir -p "$HOME/Library/Application Support/CalendarAirplane"
+   cp CalendarAirplane/GoogleOAuth.local.plist.example "$HOME/Library/Application Support/CalendarAirplane/GoogleOAuth.local.plist"
+   ```
+   The app checks this external file first, then falls back to bundled `GoogleOAuth.local.plist` for development.
+   `Info.plist` only contains placeholders.
 
 The app uses Google’s loopback redirect `http://127.0.0.1:8765/oauth2redirect`, which Desktop clients allow automatically.
 
@@ -28,7 +35,30 @@ The app uses Google’s loopback redirect `http://127.0.0.1:8765/oauth2redirect`
 1. Open [`CalendarAirplane.xcodeproj`](CalendarAirplane.xcodeproj).
 2. Select your **Signing Team** in the target’s Signing & Capabilities.
 3. Build and run (⌘R).
-4. **Calendar Airplane → Settings**: sign in with Google, enable **Open at login** if you want startup launch, set lead time, use **Demo View** to preview the animation.
+4. **Calendar Airplane → Settings**: sign in with Google, enable **Open at login** if you want startup launch, set lead time/speed, use **Demo flight** to preview the animation.
+
+## Open-source safety checklist
+
+Before making the repo public:
+
+- Keep `CalendarAirplane/GoogleOAuth.local.plist` untracked (already in `.gitignore`).
+- Rotate OAuth credentials if they were ever shared or committed before.
+- Keep `Info.plist` values as placeholders only (`YOUR_*`).
+- Avoid distributing binaries that contain your personal OAuth secret.
+- Prefer the external config file (`~/Library/Application Support/CalendarAirplane/GoogleOAuth.local.plist`) for personal builds.
+
+## Local release/install checklist (no paid Apple developer account)
+
+1. In Xcode target **Signing & Capabilities**, select your **Personal Team**.
+2. Build a **Release** archive (`Product` → `Archive`).
+3. Export, then move `Calendar Airplane.app` to `/Applications`.
+4. Launch once; if blocked, allow via **System Settings → Privacy & Security → Open Anyway**.
+5. Verify:
+   - Menu bar airplane icon is visible.
+   - **Settings** opens from the popover.
+   - Google sign-in works.
+   - **Demo flight** runs.
+   - **Open at login** toggle works after relaunch.
 
 ## Behavior
 

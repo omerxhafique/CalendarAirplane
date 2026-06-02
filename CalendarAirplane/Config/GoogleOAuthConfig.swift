@@ -23,7 +23,7 @@ enum GoogleOAuthConfig {
         return !id.hasPrefix("YOUR_") && !secret.hasPrefix("YOUR_")
     }
 
-    /// Prefer `GoogleOAuth.local.plist` (gitignored); fall back to Info.plist placeholders.
+    /// Prefer external local config, then bundled local plist (dev), then Info.plist placeholders.
     private static func oauthValue(for key: String) -> String? {
         if let local = localOAuthPlist()[key] as? String,
            !local.isEmpty,
@@ -39,12 +39,25 @@ enum GoogleOAuthConfig {
     }
 
     private static func localOAuthPlist() -> [String: Any] {
-        guard let url = Bundle.main.url(forResource: "GoogleOAuth.local", withExtension: "plist"),
-              let data = try? Data(contentsOf: url),
-              let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
-              let dict = plist as? [String: Any] else {
-            return [:]
+        for url in localOAuthCandidateURLs() {
+            guard let data = try? Data(contentsOf: url),
+                  let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
+                  let dict = plist as? [String: Any] else {
+                continue
+            }
+            return dict
         }
-        return dict
+        return [:]
+    }
+
+    private static func localOAuthCandidateURLs() -> [URL] {
+        var urls: [URL] = []
+        if let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            urls.append(appSupport.appendingPathComponent("CalendarAirplane/GoogleOAuth.local.plist"))
+        }
+        if let bundled = Bundle.main.url(forResource: "GoogleOAuth.local", withExtension: "plist") {
+            urls.append(bundled)
+        }
+        return urls
     }
 }
