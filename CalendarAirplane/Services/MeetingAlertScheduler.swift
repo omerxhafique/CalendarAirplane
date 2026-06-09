@@ -16,6 +16,7 @@ final class MeetingAlertScheduler: ObservableObject {
     private var pollTask: Task<Void, Never>?
     private struct FlyoverPayload {
         let title: String
+        let subtitle: String?
         let timeRange: String?
     }
 
@@ -45,7 +46,7 @@ final class MeetingAlertScheduler: ObservableObject {
         let start = Date().addingTimeInterval(5 * 60)
         let end = start.addingTimeInterval(30 * 60)
         let range = "\(TodayAgendaStore.formatTime(start)) – \(TodayAgendaStore.formatTime(end))"
-        enqueueAnimation(title: title, timeRange: range, dedupeKey: nil)
+        enqueueAnimation(title: title, subtitle: "Preview", timeRange: range)
     }
 
     private func pollLoop() async {
@@ -57,25 +58,64 @@ final class MeetingAlertScheduler: ObservableObject {
         isPolling = false
     }
 
+    private static let fixedFiveMinuteLead = 5
+    private static let pollIntervalSeconds: TimeInterval = 60
+    /// Half-open window around each alert offset (tuned for 60s polling).
+    private static let alertWindowPadding: TimeInterval = 60
+
+    private enum AlertPhase: String {
+        case lead
+        case fiveMinute = "5min"
+        case start
+    }
+
     private func tick() async {
         guard alertsEnabled else { return }
         guard GoogleAuthService.shared.isSignedIn else { return }
 
         let lead = max(1, leadTimeMinutes)
         let now = Date()
-        let windowEnd = now.addingTimeInterval(TimeInterval(lead * 60))
+        let fetchHorizonMinutes = max(lead, Self.fixedFiveMinuteLead)
+        let fetchStart = now.addingTimeInterval(-Self.alertWindowPadding)
+        let fetchEnd = now.addingTimeInterval(TimeInterval(fetchHorizonMinutes * 60) + Self.alertWindowPadding)
 
         do {
             let token = try await GoogleAuthService.shared.getValidAccessToken()
-            let events = try await calendarService.fetchEvents(from: now, to: windowEnd, accessToken: token)
+            let events = try await calendarService.fetchEvents(from: fetchStart, to: fetchEnd, accessToken: token)
 
             for event in events {
                 let secondsUntil = event.startDate.timeIntervalSince(now)
-                guard secondsUntil > 0, secondsUntil <= TimeInterval(lead * 60) else { continue }
-                guard !alertedKeys.contains(event.dedupeKey) else { continue }
-                markAlerted(event.dedupeKey)
                 let range = TodayAgendaStore.formatTimeRange(for: event)
-                enqueueAnimation(title: event.title, timeRange: range, dedupeKey: event.dedupeKey)
+
+                if shouldFireLeadAlert(secondsUntil: secondsUntil, leadMinutes: lead),
+                   !hasAlerted(event: event, phase: .lead) {
+                    markAlerted(event: event, phase: .lead)
+                    enqueueAnimation(
+                        title: event.title,
+                        subtitle: subtitle(for: .lead, leadMinutes: lead),
+                        timeRange: range
+                    )
+                }
+
+                if shouldFireFiveMinuteAlert(secondsUntil: secondsUntil, leadMinutes: lead),
+                   !hasAlerted(event: event, phase: .fiveMinute) {
+                    markAlerted(event: event, phase: .fiveMinute)
+                    enqueueAnimation(
+                        title: event.title,
+                        subtitle: subtitle(for: .fiveMinute, leadMinutes: lead),
+                        timeRange: range
+                    )
+                }
+
+                if shouldFireStartAlert(secondsUntil: secondsUntil),
+                   !hasAlerted(event: event, phase: .start) {
+                    markAlerted(event: event, phase: .start)
+                    enqueueAnimation(
+                        title: event.title,
+                        subtitle: subtitle(for: .start, leadMinutes: lead),
+                        timeRange: range
+                    )
+                }
             }
             statusMessage = nil
         } catch CalendarError.unauthorized {
@@ -83,6 +123,49 @@ final class MeetingAlertScheduler: ObservableObject {
             statusMessage = CalendarError.unauthorized.localizedDescription
         } catch {
             statusMessage = error.localizedDescription
+        }
+    }
+
+    private func shouldFireLeadAlert(secondsUntil: TimeInterval, leadMinutes: Int) -> Bool {
+        isWithinAlertWindow(secondsUntil: secondsUntil, minutesBeforeStart: leadMinutes)
+    }
+
+    private func shouldFireFiveMinuteAlert(secondsUntil: TimeInterval, leadMinutes: Int) -> Bool {
+        guard leadMinutes != Self.fixedFiveMinuteLead else { return false }
+        return isWithinAlertWindow(secondsUntil: secondsUntil, minutesBeforeStart: Self.fixedFiveMinuteLead)
+    }
+
+    private func shouldFireStartAlert(secondsUntil: TimeInterval) -> Bool {
+        secondsUntil <= Self.alertWindowPadding && secondsUntil >= -Self.alertWindowPadding
+    }
+
+    private func isWithinAlertWindow(secondsUntil: TimeInterval, minutesBeforeStart: Int) -> Bool {
+        let target = TimeInterval(minutesBeforeStart * 60)
+        let lower = max(0, target - Self.pollIntervalSeconds)
+        let upper = target + Self.alertWindowPadding
+        return secondsUntil > lower && secondsUntil <= upper
+    }
+
+    private func alertKey(event: CalendarEvent, phase: AlertPhase) -> String {
+        "\(event.dedupeKey)|\(phase.rawValue)"
+    }
+
+    private func hasAlerted(event: CalendarEvent, phase: AlertPhase) -> Bool {
+        alertedKeys.contains(alertKey(event: event, phase: phase))
+    }
+
+    private func markAlerted(event: CalendarEvent, phase: AlertPhase) {
+        markAlerted(alertKey(event: event, phase: phase))
+    }
+
+    private func subtitle(for phase: AlertPhase, leadMinutes: Int) -> String {
+        switch phase {
+        case .lead:
+            return "In \(leadMinutes) minutes"
+        case .fiveMinute:
+            return "In 5 minutes"
+        case .start:
+            return "Starting now"
         }
     }
 
@@ -95,8 +178,8 @@ final class MeetingAlertScheduler: ObservableObject {
         alertedKeys = keys
     }
 
-    private func enqueueAnimation(title: String, timeRange: String?, dedupeKey: String?) {
-        animationQueue.append(FlyoverPayload(title: title, timeRange: timeRange))
+    private func enqueueAnimation(title: String, subtitle: String?, timeRange: String?) {
+        animationQueue.append(FlyoverPayload(title: title, subtitle: subtitle, timeRange: timeRange))
         processQueue()
     }
 
@@ -106,6 +189,7 @@ final class MeetingAlertScheduler: ObservableObject {
         let payload = animationQueue.removeFirst()
         OverlayWindowController.shared.playFlight(
             meetingTitle: payload.title,
+            subtitle: payload.subtitle,
             timeRange: payload.timeRange
         ) { [weak self] in
             Task { @MainActor in

@@ -65,7 +65,7 @@ Before making the repo public:
 ## Behavior
 
 - Polls your **primary** calendar every 60 seconds.
-- When a meeting starts within your configured lead time (default 10 minutes), the flyover runs once per event instance.
+- Flyover runs up to three times per meeting: at your configured lead time (default 10 minutes before), again at 5 minutes before (unless lead time is already 5), and when the meeting starts.
 - Overlay is click-through and appears above normal windows (macOS may still hide it in some full-screen cases).
 
 ## Project layout

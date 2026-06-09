@@ -10,7 +10,12 @@ final class OverlayWindowController {
 
     private init() {}
 
-    func playFlight(meetingTitle: String, timeRange: String? = nil, completion: @escaping () -> Void) {
+    func playFlight(
+        meetingTitle: String,
+        subtitle: String? = nil,
+        timeRange: String? = nil,
+        completion: @escaping () -> Void
+    ) {
         guard let screen = NSScreen.main else {
             completion()
             return
@@ -28,7 +33,7 @@ final class OverlayWindowController {
         panel.setFrame(frame, display: true)
         self.panel = panel
 
-        let view = AirplaneBannerView(meetingTitle: meetingTitle, timeRange: timeRange) {
+        let view = AirplaneBannerView(meetingTitle: meetingTitle, subtitle: subtitle, timeRange: timeRange) {
             panel.orderOut(nil)
             completion()
         }

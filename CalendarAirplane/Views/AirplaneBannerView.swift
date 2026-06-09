@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AirplaneBannerView: View {
     let meetingTitle: String
+    let subtitle: String?
     let timeRange: String?
     let onComplete: () -> Void
 
@@ -18,7 +19,7 @@ struct AirplaneBannerView: View {
                 Color.clear
 
                 HStack(alignment: .center, spacing: 0) {
-                    MeetingBanner(title: meetingTitle, timeRange: timeRange)
+                    MeetingBanner(title: meetingTitle, subtitle: subtitle, timeRange: timeRange)
 
                     TowLine()
 
@@ -45,6 +46,7 @@ struct AirplaneBannerView: View {
 
 private struct MeetingBanner: View {
     let title: String
+    let subtitle: String?
     let timeRange: String?
 
     var body: some View {
@@ -55,10 +57,17 @@ private struct MeetingBanner: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
 
+            if let subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(AppTheme.ink.opacity(0.9))
+                    .multilineTextAlignment(.center)
+            }
+
             if let timeRange, !timeRange.isEmpty {
                 Text(timeRange)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(AppTheme.ink.opacity(0.85))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(AppTheme.ink.opacity(0.8))
                     .multilineTextAlignment(.center)
             }
         }
@@ -89,7 +98,11 @@ enum FlyoverPalette {
 }
 
 #Preview {
-    AirplaneBannerView(meetingTitle: "Team sync", timeRange: "10:00 AM – 10:30 AM") {}
+    AirplaneBannerView(
+        meetingTitle: "Team sync",
+        subtitle: "In 5 minutes",
+        timeRange: "10:00 AM – 10:30 AM"
+    ) {}
         .frame(width: 900, height: 120)
         .background(Color.gray.opacity(0.15))
 }

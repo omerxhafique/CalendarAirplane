@@ -27,6 +27,7 @@ struct SettingsView: View {
                     Stepper(value: $leadTimeMinutes, in: 1 ... 120, step: 1) {
                         Text("\(leadTimeMinutes) min before start")
                     }
+                    noteText("Flyovers also run 5 minutes before each meeting and when the meeting starts (within about one minute).")
                 } header: {
                     sectionHeader("Alerts")
                 }
